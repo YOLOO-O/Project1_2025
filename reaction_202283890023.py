@@ -5,38 +5,76 @@
 # Description: Part2 - Controlling the light + Adding element of surprise in the Quick Reaction Game using RPi.GPIO
  
 from gpiozero import LED, Button  
-from time import sleep  
+from time import sleep, time  
 from random import uniform  
 
-left_name = input("Please enter left player's name:")
-right_name = input("Please enter right player's name:")
-  
+# Get player names  
+left_name = input("Enter left player's name: ")  
+right_name = input("Enter right player's name: ")  
+
+# Initialize LED and two buttons  
 led = LED(4)  
-right_button = Button(14)   
-left_button = Button(15)    
+# According to the requirements, left button is connected to GPIO14 and right button to GPIO15  
+left_button = Button(14)  
+right_button = Button(15)  
 
-print("Quick Reaction Game - Phase: Controlling the light + Surprise!")  
+# Initialize scores  
+left_score = 0  
+right_score = 0  
 
-print("LED ON")  
-led.on()  
-   
-delay_time = uniform(5, 10)  
-print(f"Waiting for {delay_time:.2f} seconds...")  
-sleep(delay_time)  
+# Define the button press callback function to calculate reaction time and update scores  
+def button_pressed(button):  
+    global win, reaction_time, left_score, right_score, start_time  
+    # Ensure that only the first press in each round is recorded  
+    if win is None:  
+        reaction_time = time() - start_time  
+        if button.pin.number == left_button.pin.number:  
+            win = left_name  
+            left_score += 1  
+        else:  
+            win = right_name  
+            right_score += 1  
 
-print("LED OFF")  
-led.off()  
+print("Quick Reaction Game - Final Version")  
+print("--------------------------------------")  
 
-  
-def pressed(button):
-    if button.pin.number == 14:  
-       print(left_name + ' won the game')  
-    else:
-       print(right_name + ' won the game')
-    exit()
-
-right_button.when_pressed = pressed  
-left_button.when_pressed = pressed  
-  
+# The game enters a loop, repeating each round  
 while True:  
-    sleep(1)  
+    print("\nNew round starts!")  
+    # LED on: players' waiting phase  
+    print("LED ON")  
+    led.on()  
+    
+    # Random wait between 5 and 10 seconds  
+    wait_time = uniform(5, 10)  
+    print(f"Waiting for {wait_time:.2f} seconds... Get ready!")  
+    sleep(wait_time)  
+    
+    # LED off: start recording reaction time  
+    print("LED OFF")  
+    led.off()  
+    start_time = time()  
+    
+    # Reset previous round's winner and reaction time  
+    win = None  
+    reaction_time = None  
+
+    # Bind the button press callback function to both buttons  
+    left_button.when_pressed = button_pressed  
+    right_button.when_pressed = button_pressed  
+
+    # Wait until one button is pressed (winner is determined)  
+    while win is None:  
+        sleep(0.01)  
+
+    # Output the result of the current round and reaction time  
+    print(f"{win} pressed the button in {reaction_time:.3f} seconds and won this round!")  
+    print(f"Current score: {left_name}: {left_score} points, {right_name}: {right_score} points")  
+    
+    # Unbind button callbacks to avoid repeated detection  
+    left_button.when_pressed = None  
+    right_button.when_pressed = None  
+
+    # Provide a short interval before the next round starts  
+    print("Next round will start in 3 seconds...")  
+    sleep(3)
