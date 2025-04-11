@@ -7,6 +7,9 @@
 from gpiozero import LED, Button  
 from time import sleep  
 from random import uniform  
+
+left_name = input("Please enter left player's name:")
+right_name = input("Please enter right player's name:")
   
 led = LED(4)  
 right_button = Button(14)   
@@ -25,9 +28,13 @@ print("LED OFF")
 led.off()  
 
   
-def pressed(button):  
-    print(str(button.pin.number) + ' won the game')  
- 
+def pressed(button):
+    if button.pin.number == 14:  
+       print(left_name + ' won the game')  
+    else:
+       print(right_name + ' won the game')
+    exit()
+
 right_button.when_pressed = pressed  
 left_button.when_pressed = pressed  
   
