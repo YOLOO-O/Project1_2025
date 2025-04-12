@@ -1,5 +1,11 @@
+# reaction.py
+# Author: Liu Zibo
+# ID: 20110005@mail.wit.ie(SETU)/202283890001(NUIST)
+# Date: 2025-04-11
+# Description: Quick Reaction Game - Final Version
+
 from gpiozero import LED, Button
-from time import sleep
+from time import sleep, time
 from random import uniform
 
 left_name = input("Enter left player's name: ")
@@ -9,42 +15,59 @@ led = LED(4)
 left_button = Button(14)
 right_button = Button(15)
 
-game_over = False
+left_score = 0
+right_score = 0
+winner = None
+reaction_time = 0
+start_time = 0
 
 def pressed(button):
-    global game_over
-    if button.pin.number == 14:
-        print(left_name + " won the game!")
-    else:
-        print(right_name + " won the game!")
-    game_over = True
+    global winner, left_score, right_score, reaction_time
+    if winner is None:
+        reaction_time = time() - start_time
+        if button.pin.number == 14:
+            winner = left_name
+            left_score += 1
+        else:
+            winner = right_name
+            right_score += 1
 
-print("Quick Reaction Game - Phase: Detecting the buttons + Player names")
+print("\nQuick Reaction Game - Final Version with Scores and Timer")
+print("------------------------------------------------------------")
 
 try:
-    print("LED ON")
-    led.on()
+    while True:
+        print("\nNew round starting...")
+        print("LED ON (get ready)")
+        led.on()
+        wait_time = uniform(5, 10)
+        sleep(wait_time)
 
-    delay_time = uniform(5, 10)
-    print(f"Waiting for {delay_time:.2f} seconds... Get ready!")
-    sleep(delay_time)
+        print("LED OFF! Press the button!")
+        led.off()
+        start_time = time()
 
-    print("LED OFF")
-    led.off()
+        winner = None
+        reaction_time = 0
 
-    print("Waiting for button press...")
+        left_button.when_pressed = pressed
+        right_button.when_pressed = pressed
 
-    left_button.when_pressed = pressed
-    right_button.when_pressed = pressed
+        while winner is None:
+            sleep(0.01)
 
-    while not game_over:
-        sleep(0.1)
+        print(f"{winner} won this round!")
+        print(f"Reaction time: {reaction_time:.3f} seconds")
+        print(f"Scoreboard: {left_name} - {left_score} | {right_name} - {right_score}")
+        print("Next round in 3 seconds...\n")
+        sleep(3)
 
 except KeyboardInterrupt:
-    print("\nGame stopped by user.")
+    print("\nGame ended by user.")
 
 finally:
     print("Cleaning up GPIO resources...")
     led.close()
     left_button.close()
     right_button.close()
+
