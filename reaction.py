@@ -1,30 +1,46 @@
-# reaction.py
+# reaction.py 
 # Author: Liu Zibo
 # ID: 20110005@mail.wit.ie(SETU)/202283890001(NUIST)
 # Date: 2025-04-11
-# Description: Part 2 - Controlling the light + Adding element of surprise in the Quick Reaction Game using RPi.GPIO
+# Description: Part 2 - Controlling the light + Detecting button presses using gpiozero (fixed)
 
-import RPi.GPIO as GPIO
-import time
+from gpiozero import LED, Button
+from time import sleep
 from random import uniform
 
-GPIO.setmode(GPIO.BCM)
-GPIO.setwarnings(False)
-GPIO.setup(4, GPIO.OUT)
+led = LED(4)
+left_button = Button(14)
+right_button = Button(15)
+
+def pressed(button):
+    print(str(button.pin.number) + " won the game")
+
+print("Quick Reaction Game - Phase: Detecting the buttons")
 
 try:
-    print("Quick Reaction Game - Phase: Controlling the light + Surprise!")
-
     print("LED ON")
-    GPIO.output(4, GPIO.HIGH)
-    
+    led.on()
+
     delay_time = uniform(5, 10)
-    print(f"Waiting for {delay_time:.2f} seconds...")
-    time.sleep(delay_time)
+    print(f"Waiting for {delay_time:.2f} seconds... Get ready!")
+    sleep(delay_time)
 
     print("LED OFF")
-    GPIO.output(4, GPIO.LOW)
+    led.off()
+
+    print("Waiting for button press... (Press Ctrl+C to quit)")
+
+    left_button.when_pressed = pressed
+    right_button.when_pressed = pressed
+
+    while True:
+        sleep(0.1)
+
+except KeyboardInterrupt:
+    print("\nGame stopped by user.")
 
 finally:
-    GPIO.cleanup()
-
+    print("Cleaning up GPIO resources...")
+    led.close()
+    left_button.close()
+    right_button.close()
